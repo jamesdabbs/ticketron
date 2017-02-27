@@ -1,4 +1,6 @@
 class VoiceController < ApplicationController
+  include ActionView::Helpers::TextHelper
+
   skip_before_action :verify_authenticity_token
   skip_before_action :authenticate_user!
 
@@ -12,7 +14,13 @@ class VoiceController < ApplicationController
     month = concert.at.strftime '%B'
     day   = concert.at.strftime('%d').to_i.ordinalize
 
-    text = "Your next concert is #{artists.to_sentence} at #{concert.venue.name} on #{month} #{day}"
+    text = "Your next concert is #{artists.to_sentence} at #{concert.venue.name} on #{month} #{day}."
+
+    others = Concert.in_month(concert.at).count
+    if others > 0
+      text += " You have #{pluralize others, 'other concert'} in #{month}."
+    end
+
 
     render json: {
       source: "ticketron",

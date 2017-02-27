@@ -8,6 +8,7 @@ class Concert < ApplicationRecord
   has_many :attendees, through: :concert_attendees, source: :user
 
   scope :upcoming, -> { where 'at > ?', 1.day.ago }
+  scope :in_month, ->(date) { where 'at BETWEEN ? AND ?', date.at_beginning_of_month, date.at_end_of_month }
 
   def add_artist artist
     concert_artists.where(artist: artist).first_or_create!
