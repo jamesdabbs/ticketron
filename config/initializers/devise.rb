@@ -248,6 +248,10 @@ Devise.setup do |config|
   # Add a new OmniAuth provider. Check the wiki for more information on setting
   # up on your models and hooks.
   # config.omniauth :github, 'APP_ID', 'APP_SECRET', scope: 'user,public_repo'
+  config.omniauth :spotify, \
+    Figaro.env.spotify_client_id!,
+    Figaro.env.spotify_client_secret!,
+    scope: 'user-read-email playlist-read-collaborative playlist-modify-public'
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

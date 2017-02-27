@@ -1,0 +1,14 @@
+table.table.table-striped.table-hover
+  thead
+    tr
+      th Name
+      th Songkick
+      th
+        ' Spotify 
+        = link_to 'Scan', spot_artists_path, class: 'btn btn-default btn-xs', method: :post
+  tbody
+    - @artists.each do |a|
+      tr
+        td= a.name
+        td= link_to a.songkick_id, "https://songkick.com/artists/#{a.songkick_id}"
+        td= a.spotify_id

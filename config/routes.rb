@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
-  devise_for :users
-  # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
+  devise_for :users, controllers: { omniauth_callbacks: :omniauth_callbacks }
+
+  resources :concerts, only: [:index]
+  resources :artists, only: [:index, :show] do
+    collection do
+      post :lookup_spotify_id, as: :spot
+    end
+  end
+  resource :playlist, only: [:update, :show]
+
+  post 'home' => 'voice#home'
+
+  root to: 'concerts#index'
 end

@@ -10,10 +10,46 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170227174805) do
+ActiveRecord::Schema.define(version: 20170227203220) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "artists", force: :cascade do |t|
+    t.string   "name"
+    t.string   "songkick_id"
+    t.string   "spotify_id"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
+  end
+
+  create_table "concert_artists", force: :cascade do |t|
+    t.integer  "concert_id"
+    t.integer  "artist_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["artist_id"], name: "index_concert_artists_on_artist_id", using: :btree
+    t.index ["concert_id"], name: "index_concert_artists_on_concert_id", using: :btree
+  end
+
+  create_table "concert_attendees", force: :cascade do |t|
+    t.integer  "concert_id"
+    t.integer  "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["concert_id"], name: "index_concert_attendees_on_concert_id", using: :btree
+    t.index ["user_id"], name: "index_concert_attendees_on_user_id", using: :btree
+  end
+
+  create_table "concerts", force: :cascade do |t|
+    t.integer  "venue_id"
+    t.string   "songkick_id"
+    t.datetime "at"
+    t.json     "tickets"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
+    t.index ["venue_id"], name: "index_concerts_on_venue_id", using: :btree
+  end
 
   create_table "users", force: :cascade do |t|
     t.string   "email",                  default: "", null: false
@@ -28,8 +64,23 @@ ActiveRecord::Schema.define(version: 20170227174805) do
     t.inet     "last_sign_in_ip"
     t.datetime "created_at",                          null: false
     t.datetime "updated_at",                          null: false
+    t.string   "spotify_id"
+    t.json     "spotify_data"
     t.index ["email"], name: "index_users_on_email", unique: true, using: :btree
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
   end
 
+  create_table "venues", force: :cascade do |t|
+    t.string   "songkick_id"
+    t.string   "name"
+    t.string   "address"
+    t.datetime "created_at",  null: false
+    t.datetime "updated_at",  null: false
+  end
+
+  add_foreign_key "concert_artists", "artists"
+  add_foreign_key "concert_artists", "concerts"
+  add_foreign_key "concert_attendees", "concerts"
+  add_foreign_key "concert_attendees", "users"
+  add_foreign_key "concerts", "venues"
 end

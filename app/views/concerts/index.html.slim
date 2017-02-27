@@ -1,0 +1,19 @@
+= link_to 'Generate Playlist', playlist_path, method: :patch, class: 'btn btn-default'
+= link_to 'Open Playlist', playlist_path, class: 'btn btn-default'
+
+table.table.table-striped.table-hover
+  thead
+    tr
+      th Date
+      th Venue
+      th Artists
+      th Tickets
+  tbody
+    - @concerts.each do |c|
+      tr
+        td= c.at.strftime '%b %d'
+        td= c.venue.name
+        td
+          - c.artists.each do |artist|
+            div= link_to artist.name, artist
+        td= c.tickets
