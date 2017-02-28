@@ -11,7 +11,8 @@ class User < ApplicationRecord
     u = where(spotify_id: auth.uid).first_or_initialize
     u.spotify_data = auth.to_h
 
-    u.email = auth.extra.raw_info.email unless u.email.present?
+    u.email    = auth.extra.raw_info.email unless u.email.present?
+    u.password = SecureRandom.hex 32 unless u.password.present?
 
     u.save!
     u
