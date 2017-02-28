@@ -1,5 +1,8 @@
-= link_to 'Generate Playlist', playlist_path, method: :patch, class: 'btn btn-default'
-= link_to 'Open Playlist', playlist_path, class: 'btn btn-default'
+= bootstrap_form_for Concert.new do |f|
+  = f.text_field :songkick_id, placeholder: 'Paste in a Songkick link to import'
+  = f.submit
+
+hr
 
 table.table.table-striped.table-hover
   thead
@@ -16,4 +19,6 @@ table.table.table-striped.table-hover
         td
           - c.artists.each do |artist|
             div= link_to artist.name, artist
-        td= c.tickets
+        td
+          - if @attends
+            = render partial: 'ticket_status', locals: { attendee: @attends[c.id] }

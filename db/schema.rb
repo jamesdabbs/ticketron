@@ -35,6 +35,7 @@ ActiveRecord::Schema.define(version: 20170227203220) do
   create_table "concert_attendees", force: :cascade do |t|
     t.integer  "concert_id"
     t.integer  "user_id"
+    t.json     "tickets"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["concert_id"], name: "index_concert_attendees_on_concert_id", using: :btree
@@ -45,7 +46,6 @@ ActiveRecord::Schema.define(version: 20170227203220) do
     t.integer  "venue_id"
     t.string   "songkick_id"
     t.datetime "at"
-    t.json     "tickets"
     t.datetime "created_at",  null: false
     t.datetime "updated_at",  null: false
     t.index ["venue_id"], name: "index_concerts_on_venue_id", using: :btree
@@ -66,6 +66,7 @@ ActiveRecord::Schema.define(version: 20170227203220) do
     t.datetime "updated_at",                          null: false
     t.string   "spotify_id"
     t.json     "spotify_data"
+    t.string   "google_user_id"
     t.index ["email"], name: "index_users_on_email", unique: true, using: :btree
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true, using: :btree
   end

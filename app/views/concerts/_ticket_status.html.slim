@@ -1,0 +1,3 @@
+.btn-group
+  - ConcertAttendee::STATUSES.each do |key, status|
+    = link_to status.label, concert_ticket_path(attendee.concert, attendee, status: key), method: :patch, class: "btn btn-default #{attendee.status == status ? 'active' : ''}"

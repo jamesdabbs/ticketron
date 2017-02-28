@@ -7,6 +7,10 @@ module Songkick
     end
 
     def import concert_id
+      unless concert_id.to_s =~ /^\d+$/
+        concert_id = id(concert_id)
+      end
+
       @logger.info "Adding concert #{concert_id}"
       visit "/concerts/#{concert_id}"
 

@@ -3,7 +3,7 @@ class ArtistsController < ApplicationController
 
   def index
     # TODO: only artists that I track
-    @artists = Artist.all
+    @artists = Artist.all.order(name: :asc)
   end
 
   def show

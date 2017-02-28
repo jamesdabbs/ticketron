@@ -6,7 +6,7 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 
-user = User.new spotify_id: 'jamesdabbs'
+user = User.new spotify_id: 'jamesdabbs', google_user_id: Figaro.env.google_home_user_id!
 user.save! validate: false
 
 sk = Songkick::Scraper.new user: user, logger: Logger.new(STDOUT)

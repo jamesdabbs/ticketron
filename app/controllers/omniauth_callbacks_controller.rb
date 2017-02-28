@@ -4,4 +4,8 @@ class OmniauthCallbacksController < Devise::OmniauthCallbacksController
     sign_in user
     redirect_to '/', success: 'Signed in with Spotify'
   end
+
+  def after_omniauth_failure_path_for scope
+    '/'
+  end
 end

@@ -1,6 +1,7 @@
 class User < ApplicationRecord
-  devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :trackable, :validatable,
+  devise :registerable, :recoverable, :rememberable, :trackable,
+         # FIXME: we need these for there to be a signout link
+         :database_authenticatable, :validatable,
          :omniauthable, omniauth_providers: [:spotify]
 
   has_many :concert_attendees
@@ -10,8 +11,7 @@ class User < ApplicationRecord
     u = where(spotify_id: auth.uid).first_or_initialize
     u.spotify_data = auth.to_h
 
-    u.email    = auth.extra.raw_info.email unless u.email.present?
-    u.password = SecureRandom.hex 32 unless u.password.present?
+    u.email = auth.extra.raw_info.email unless u.email.present?
 
     u.save!
     u
@@ -32,5 +32,11 @@ class User < ApplicationRecord
 
   def country # TODO
     'us'
+  end
+
+  def tickets_for concert
+    attendee = concert_attendees.find_by concert: concert
+    return unless attendee
+    attendee.status
   end
 end
