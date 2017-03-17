@@ -7,6 +7,9 @@ html lang="en"
     title= content_for?(:title) ? yield(:title) : "Ticketron"
     = csrf_meta_tags
     = stylesheet_link_tag "application", :media => "all"
+    link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/3.3.7/cosmo/bootstrap.min.css"
+
+
     /= favicon_link_tag 'apple-touch-icon-144x144-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '144x144'
     /= favicon_link_tag 'apple-touch-icon-114x114-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '114x114'
     /= favicon_link_tag 'apple-touch-icon-72x72-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '72x72'
@@ -28,12 +31,11 @@ html lang="en"
           a.navbar-brand href="/" Ticketron
           .navbar-collapse.collapse.navbar-responsive-collapse
             ul.nav.navbar-nav
-              li= link_to "Concerts", "/concerts"
-              li= link_to "Artists", "/artists"
+              li= link_to 'Mail', mail_index_path
 
             ul.nav.navbar-nav.pull-right
               - if current_user
-                li= link_to current_user.spotify_id, edit_user_registration_path(current_user)
+                li= link_to current_user.spotify_id, profile_path
                 li= link_to 'Sign Out', destroy_user_session_path, method: :delete
               - else
                 li= link_to 'Sign In', user_spotify_omniauth_authorize_path
@@ -44,7 +46,3 @@ html lang="en"
           = bootstrap_flash
           = yield
         .col-lg-3
-          h3 Spotify
-          ul.nav.nav-list
-            li= link_to 'Open', playlist_path, class: 'btn btn-default'
-            li= link_to 'Re-generate', playlist_path, method: :patch, class: 'btn btn-default'

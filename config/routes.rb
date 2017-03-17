@@ -1,15 +1,23 @@
 Rails.application.routes.draw do
-  devise_for :users, controllers: { omniauth_callbacks: :omniauth_callbacks }
+  use_doorkeeper
+
+  devise_for :users, controllers: { omniauth_callbacks: :auth }
+  delete '/users/sign_out' => 'auth#logout', as: :destroy_user_session
+
+  resource :profile, only: [:show]
 
   resources :concerts, only: [:index, :create] do
     resources :tickets, only: [:update]
   end
-  resources :artists, only: [:index, :show] do
-    collection do
-      post :lookup_spotify_id, as: :spot
+  resource :playlist, only: [:update, :show]
+
+  resources :users, only: [:index, :show]
+
+  resources :mail, only: [:index, :show, :create] do
+    member do
+      post :retry
     end
   end
-  resource :playlist, only: [:update, :show]
 
   post 'home' => 'voice#home'
 

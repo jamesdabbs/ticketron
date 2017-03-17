@@ -1,0 +1,43 @@
+#!/usr/bin/env ruby
+require 'httparty'
+require 'dotenv'
+require 'pry'
+
+Dotenv.load
+
+HOSTNAME = 'mail.jdabbs.com'
+
+response  = HTTParty.get('http://localhost:4040/status')
+NGROK = response.body =~ /(https:\/\/\w+.ngrok.io)/ && $1
+raise "Could not find subdomain: #{response.body}" unless NGROK
+
+sendgrid = ->(verb, path, body={}) {
+  response = HTTParty.send verb, "https://api.sendgrid.com/v3/#{path}",
+    headers: {
+      'Authorization' => "Bearer #{ENV.fetch('SENDGRID_TOKEN')}",
+      'Content-Type' => 'application/json'
+    },
+    body: body.to_json
+  unless response.code.to_s.start_with? '2'
+    raise response.body
+  end
+  response
+}
+
+response = sendgrid.call :get, "user/webhooks/parse/settings"
+target = "#{NGROK}/mail"
+unless response['result'].find { |h| h['url'] == target }
+  sendgrid.call :delete, "user/webhooks/parse/settings/#{HOSTNAME}"
+  sendgrid.call :post,   "user/webhooks/parse/settings", {
+    "hostname": HOSTNAME,
+    "url": target,
+    "spam_check": true,
+    "send_raw": false
+  }
+end
+
+puts "Your ngrok domain is"
+puts
+puts NGROK
+puts
+puts "You will still need to reconfigure https://console.api.ai/api-client/ if desired"

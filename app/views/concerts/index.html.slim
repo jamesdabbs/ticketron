@@ -1,24 +1,4 @@
-= bootstrap_form_for Concert.new do |f|
-  = f.text_field :songkick_id, placeholder: 'Paste in a Songkick link to import'
-  = f.submit
+h2 Your Upcoming Concerts
+p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
 
-hr
-
-table.table.table-striped.table-hover
-  thead
-    tr
-      th Date
-      th Venue
-      th Artists
-      th Tickets
-  tbody
-    - @concerts.each do |c|
-      tr
-        td= c.at.strftime '%b %d'
-        td= c.venue.name
-        td
-          - c.artists.each do |artist|
-            div= link_to artist.name, artist
-        td
-          - if @attends
-            = render partial: 'ticket_status', locals: { attendee: @attends[c.id] }
+= render partial: 'table', locals: { concerts: @concerts }

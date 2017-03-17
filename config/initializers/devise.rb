@@ -252,6 +252,9 @@ Devise.setup do |config|
     Figaro.env.spotify_client_id!,
     Figaro.env.spotify_client_secret!,
     scope: 'user-read-email playlist-read-collaborative playlist-modify-public'
+  config.omniauth :google_oauth2, \
+    Figaro.env.google_client_id!,
+    Figaro.env.google_client_secret!
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or
@@ -275,4 +278,6 @@ Devise.setup do |config|
   # When using OmniAuth, Devise cannot automatically set OmniAuth path,
   # so you need to do it manually. For the users scope, it would be:
   # config.omniauth_path_prefix = '/my_engine/users/auth'
+
+  Devise::Doorkeeper.configure_devise(config)
 end

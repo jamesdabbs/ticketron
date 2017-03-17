@@ -1,0 +1,15 @@
+table.table.table-hover
+  tbody
+    tr
+      th From
+      td= @mail.from
+    tr
+      th Subject
+      td= @mail.subject
+    tr
+      th Sent
+      td= "#{time_ago_in_words @mail.created_at} ago"
+
+hr
+
+= @mail.html.html_safe

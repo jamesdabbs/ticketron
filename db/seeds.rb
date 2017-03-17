@@ -1,19 +1,24 @@
-# This file should contain all the record creation needed to seed the database with its default values.
-# The data can then be loaded with the rails db:seed command (or created alongside the database with db:setup).
-#
-# Examples:
-#
-#   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
-#   Character.create(name: 'Luke', movie: movies.first)
+# user = User.new spotify_id: 'jamesdabbs'
+# user.save! validate: false
 
-user = User.new spotify_id: 'jamesdabbs', google_user_id: Figaro.env.google_home_user_id!
-user.save! validate: false
+Doorkeeper::Application.create! \
+  name:         'Google',
+  uid:          Figaro.env.google_client_id!,
+  secret:       Figaro.env.google_client_secret!,
+  redirect_uri: "https://oauth-redirect.googleusercontent.com/r/#{Figaro.env.google_project_id!}"
 
-sk = Songkick::Scraper.new user: user, logger: Logger.new(STDOUT)
-sk.import '28733214'
-sk.import '28528294'
-sk.import '29159124'
-sk.import '29040569'
-sk.import '29220299'
-sk.import '28966259'
-sk.import '29377334'
+sk = Songkick::Scraper.new repository: Repository.new, logger: Logger.new(STDOUT)
+import = ->(id) do
+  puts "Importing #{id}"
+  sk.import id
+  # concert.concert_attendees.create! user: user
+end
+
+import.('28733214')
+import.('28528294')
+import.('29159124')
+import.('29040569')
+import.('29220299')
+import.('28966259')
+import.('29377334')
+

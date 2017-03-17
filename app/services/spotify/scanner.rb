@@ -2,35 +2,37 @@ module Spotify
   class Scanner
     NameMismatch = Class.new StandardError
 
-    def initialize user, logger: nil
-      @user   = user
-      @logger = logger || Rails.logger
+    def initialize client:, repository: nil, logger: nil
+      @client     = client
+      @repository = repository || Repository.new
+      @logger     = logger || Rails.logger
     end
 
-    def lookup_artists artists
-      artists = Artist.all
-      artists.each do |artist|
-        results = user.spotify.search 'artist', artist.name
-        next unless results['artists'].present?
+    def call
+      Artist.find_each { |a| lookup_artist artist: a }
+    end
 
-        items = results['artists']['items']
+    def lookup_artist artist
+      results = client.search 'artist', artist.name
+      return unless results['artists'].present?
 
-        found, dist = items.
-          map    { |i| [i, distance(i['name'].downcase, artist.name.downcase)] }.
-          min_by { |i,d| d }
+      items = results['artists']['items']
 
-        if dist > 3
-          logger.warn "Name mismatch: #{found['name']} / #{artist.name}"
-          next
-        end
+      found, dist = items.
+        map    { |i| [i, distance(i['name'].downcase, artist.name.downcase)] }.
+        min_by { |i,d| d }
 
-        artist.update! spotify_id: found['id']
+      if dist > 3
+        logger.warn "Name mismatch: #{found['name']} / #{artist.name}"
+        return
       end
+
+      repository.update_spotify_id artist: artist, spotify_id: found['id']
     end
 
     private
 
-    attr_reader :user, :logger
+    attr_reader :client, :repository, :logger
 
     def distance a,b
       Levenshtein.distance a,b

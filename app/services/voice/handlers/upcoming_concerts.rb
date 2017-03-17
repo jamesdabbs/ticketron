@@ -1,27 +1,28 @@
-class Voice::Handlers::UpcomingConcerts < Voice::Handlers::Base
-  def call request
-    user = user_for request
+module Voice::Handlers
+  class UpcomingConcerts < Gestalt[:repository]
+    include Voice::Handlers::Helpers
 
-    concert = user.concerts.upcoming.first
-    artists = concert.artists.map(&:name)
+    def call request
+      user = require_user! request
 
-    month = concert.at.strftime '%B'
-    day   = concert.at.strftime('%d').to_i.ordinalize
+      concert = repository.next_concert_for user: user
+      if concert.nil?
+        return Voice::Response.text 'You have no upcoming concerts'
+      end
 
-    text = "Your next concert is #{artists.to_sentence} at #{concert.venue.name} on #{month} #{day}."
+      text = ["Your next concert is #{describe_concert concert} on #{date concert.at}"]
 
+      if tickets = repository.tickets_status(user: user, concert: concert)
+        text << tickets.description
+      end
 
-    if tickets = user.tickets_for(concert)
-      text += tickets.description + ". "
+      others = repository.other_upcoming(concert: concert, user: user).count
+      if others > 0
+        month = concert.at.strftime('%B')
+        text << " You have #{pluralize others, 'other concert'} in #{month}"
+      end
+
+      Voice::Response.text text.join('. ')
     end
-
-
-    others = user.concerts.in_month(concert.at).count
-    if others > 0
-      text += " You have #{pluralize others, 'other concert'} in #{month}."
-    end
-
-
-    simple_response text
   end
 end

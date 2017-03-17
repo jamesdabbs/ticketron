@@ -1,37 +1,18 @@
 module Voice
-  def self.registry
-    @registry ||= {}
-  end
-
-  def self.register action, klass
-    registry[action] = klass
-  end
-
-  def self.simple_response text
-    {
-      source: 'Ticketron',
-      speech: text,
-      displayText: text,
-      data: {
-        google: {
-          expect_user_response: false,
-          is_ssml: false
-        }
-      }
-    }
-  end
-
   class Dispatch
-    def initialize
-      @handlers = {
-        'concerts.upcoming' => Handlers::UpcomingConcerts.new
-      }
-      @not_found = Handlers::NotFound.new
+    UserNotFound = Class.new StandardError
+
+    def initialize handlers={}
+      @handlers   = handlers
+      @not_found  = Handlers::NotFound.new
+      @not_authed = Handlers::NotAuthed.new
     end
 
     def call request
-      handler = @handlers[request.action] || @not_found
+      handler = @handlers.fetch request.action, @not_found
       handler.call request
+    rescue Voice::Dispatch::UserNotFound
+      @not_authed.call request
     end
   end
 end

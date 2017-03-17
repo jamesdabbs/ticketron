@@ -1,0 +1,20 @@
+table.table.table-condensed.table-striped.table-hover
+  thead
+    tr
+      th From
+      th At
+      th Subject
+      th Content
+      th Status
+  tbody
+    - @mail.each do |m|
+      tr
+        td= m.from
+        td= "#{time_ago_in_words m.created_at} ago"
+        td= m.subject
+        td= link_to 'View', mail_path(m), class: 'btn btn-default btn-sm'
+        td
+          - if m.concert
+            = m.concert
+          - else
+            = link_to 'Retry', retry_mail_path(m), method: :post, class: 'btn btn-default btn-sm'
