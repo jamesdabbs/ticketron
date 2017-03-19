@@ -88,11 +88,11 @@ class Repository
 
   def create_mail **opts
     opts[:email_address] = resolve_email opts[:from]
-    DB::Mail.create!(**opts)
+    DB::Email.create!(**opts)
   end
 
   def last_mail
-    Mail.last
+    Email.last
   end
 
   def user_by_spotify_id id
@@ -100,7 +100,7 @@ class Repository
   end
 
   def mail_from user
-    DB::Mail.
+    DB::Email.
       joins(:email_address).
       where(email_addresses: { user: user }).
       includes(:concert).

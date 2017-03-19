@@ -1,4 +1,4 @@
-class Mail
+module Mail
   module Parser
     class Result < Dry::Struct
       attribute :venue,   T::String

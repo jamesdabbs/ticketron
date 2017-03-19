@@ -1,4 +1,4 @@
-class Mail
+module Mail
   class Receiver < Gestalt[:handler, :repository, :logger]
     def self.build handler: nil, repository: nil, logger: nil
       new \

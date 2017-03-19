@@ -1,4 +1,4 @@
-class Mail
+module Mail
   module Parser
     class Ticketfly
       def call mail

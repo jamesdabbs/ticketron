@@ -1,4 +1,4 @@
-class Mail < Dry::Struct
+class Email < Dry::Struct
   attribute :id,          T::String
   attribute :concert,     Concert.optional
   attribute :from,        T::String

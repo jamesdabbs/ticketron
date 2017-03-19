@@ -1,4 +1,4 @@
-class Mail
+module Mail
   class Handler < Gestalt[:parsers, :repository, :notifier, :songkick]
     Unhandled = Class.new StandardError
 

@@ -14,11 +14,11 @@ class MailController < ApplicationController
   end
 
   def show
-    @mail = Mail.find params[:id]
+    @mail = Email.find params[:id]
   end
 
   def retry
-    ProcessMailJob.new.perform Mail.find params[:id]
+    ProcessMailJob.new.perform Email.find params[:id]
     redirect_to :back
   end
 end
