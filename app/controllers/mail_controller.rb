@@ -5,6 +5,7 @@ class MailController < ApplicationController
   def create
     # FIXME: need to verify sender authenticity
     container.mail_receiver.call params
+  rescue
   ensure
     head :ok
   end
@@ -18,7 +19,7 @@ class MailController < ApplicationController
   end
 
   def retry
-    ProcessMailJob.new.perform Email.find params[:id]
+    ProcessMailJob.new.perform repository.find_mail id: params[:id]
     redirect_to :back
   end
 end

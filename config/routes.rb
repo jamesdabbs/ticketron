@@ -22,8 +22,6 @@ Rails.application.routes.draw do
 
   resource :spotify, only: [:update, :show]
 
-  resources :users, only: [:index, :show]
-
   resources :mail, only: [:index, :show, :create] do
     member do
       post :retry

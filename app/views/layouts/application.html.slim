@@ -31,8 +31,8 @@ html lang="en"
           a.navbar-brand href="/" Ticketron
           .navbar-collapse.collapse.navbar-responsive-collapse
             ul.nav.navbar-nav
+              li= link_to 'Concerts', concerts_path
               li= link_to 'Friends', friends_path
-              li= link_to 'Mail', mail_index_path
 
             ul.nav.navbar-nav.pull-right
               - if current_user

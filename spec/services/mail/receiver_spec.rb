@@ -1,25 +1,34 @@
 require 'rails_helper'
 
 RSpec.describe Mail::Receiver do
-  xcontext 'sending a simple message' do
-    Given(:receiver) { described_class.build handler: handler }
-
-    When(:result) { receiver.call({ from: 'from', to: 'to' })}
-    When(:mail)   { receiver.repository.last_mail }
+  context 'sending a simple message' do
+    let(:repository) { instance_double Repository }
+    let(:receiver) {
+      described_class.build \
+        handler:    handler,
+        repository: repository
+    }
 
     context 'when handled' do
-      Given(:handler) { ->(m) { m } }
+      let(:handler) { ->(m) { m } }
 
-      Then { mail.from == 'from' }
-      And  { mail.to == 'to' }
+      it 'records a message' do
+        expect(repository).to receive(:create_mail)
+
+        receiver.call(from: 'from', to: 'to')
+      end
     end
 
     context 'when erroring' do
-      Given(:handler) { ->(*_) { raise 'Forced error' } }
+      let(:handler) { ->(*_) { raise 'Forced error' } }
 
-      Then { result == Failure(RuntimeError, 'Forced error') }
-      And  { mail.from == 'from' }
-      And  { mail.to == 'to' }
+      it 'records a message' do
+        expect(repository).to receive(:create_mail)
+
+        expect do
+          receiver.call(from: 'from', to: 'to')
+        end.to raise_error RuntimeError, 'Forced error'
+      end
     end
   end
 end

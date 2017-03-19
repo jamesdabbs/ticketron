@@ -7,9 +7,9 @@
     tr
       th Calendar
       td
-        = ago @user.meta.google.calendar_synced
-        ' 
-        = link_to 'Refresh', calendar_path, method: :patch, class: 'btn btn-default btn-xs'
+        - if @user.meta.google.calendar_synced
+          ' last synced #{ago @user.meta.google.calendar_synced} 
+      td= link_to 'Refresh', calendar_path, method: :patch, class: 'btn btn-default btn-xs'
 - else
   h3 Google
   = link_to 'Link Account', user_google_oauth2_omniauth_authorize_path, class: 'btn btn-primary'

@@ -4,6 +4,8 @@ module Spotify
       artists.each { |a| lookup_artist artist: a, spotify: spotify }
     end
 
+    private
+
     def lookup_artist artist:, spotify:
       results = spotify.search 'artist', artist.name
       return unless results['artists'].present?
@@ -21,8 +23,6 @@ module Spotify
 
       repository.update_spotify_id artist: artist, spotify_id: found['id']
     end
-
-    private
 
     def distance a,b
       Levenshtein.distance a,b

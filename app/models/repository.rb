@@ -37,8 +37,9 @@ class Repository
     end
   end
 
-  def add_tickets user:, concert:, tickets:, method:
-    att = DB::ConcertAttendee.where(user: user, concert: concert).first_or_initialize
+  def add_tickets user:, concert:, tickets: 1, method:
+    con = DB::Concert.find_by! songkick_id: concert.songkick_id
+    att = DB::ConcertAttendee.where(user: user, concert: con).first_or_initialize
     att.update! number: tickets, status: method
   end
 
@@ -84,6 +85,10 @@ class Repository
   def create_mail **opts
     opts[:email_address] = resolve_email opts[:from]
     DB::Email.create!(**opts)
+  end
+
+  def find_mail id:
+    DB::Email.find params[:id]
   end
 
   def last_mail
@@ -143,6 +148,14 @@ class Repository
 
   def google_calendar_synced user:
     add_metadata user, google: { calendar_synced: Time.now }
+  end
+
+  def get_concert songkick_id:
+    DB::Concert.find_by(songkick_id: songkick_id).try :to_model
+  end
+
+  def create_concert concert
+    raise NotImplemented
   end
 
   private

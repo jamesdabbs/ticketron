@@ -1,8 +1,11 @@
 class TicketsController < ApplicationController
   def update
-    concert  = Concert.find params[:concert_id]
-    attendee = current_user.concert_attendees.find_by concert: concert
-    attendee.set_status params[:status]
-    redirect_to :back
+    concert = repo.get_concert songkick_id: params[:concert_id]
+
+    repo.add_tickets \
+      user:    current_user,
+      concert: concert,
+      method:  Tickets::STATUSES.fetch(params[:status].to_sym)
+    redirect_back fallback_location: concerts_path
   end
 end

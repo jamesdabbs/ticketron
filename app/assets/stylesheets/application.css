@@ -14,3 +14,19 @@
  *= require_tree .
  *= require_self
  */
+
+.artist { margin: 0 0.1em }
+
+.profile-avatar {
+    height: 120px;
+    border-radius: 60px;
+}
+
+.avatar-icon {
+    height: 40px;
+    border-radius: 5px;
+}
+
+.status-btns {
+    margin: 21px 0;
+}

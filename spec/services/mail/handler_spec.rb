@@ -30,7 +30,7 @@ RSpec.describe Mail::Handler do
     ] }
 
     it 'can parse and record an email' do
-      expect(songkick).to receive(:find_concert).and_return(concert)
+      expect(songkick).to receive(:search).and_return(concert)
 
       expect(repository).to receive(:add_tickets).with(
         user: user, concert: concert, tickets: 4, method: Tickets::WillCall)
@@ -41,10 +41,16 @@ RSpec.describe Mail::Handler do
     end
 
     it 'can fail to find a concert' do
-      expect(songkick).to receive(:find_concert).and_raise(Songkick::Scraper::ConcertNotFound)
+      expect(songkick).to receive(:search).and_raise(Songkick::Scraper::ConcertNotFound)
       expect(notifier).to receive(:email_concert_not_found).with(email: mail)
 
       handler.call mail
     end
+  end
+
+  it 'can fail to handle a message' do
+    expect(notifier).to receive(:email_unhandled).with(email: mail)
+
+    handler.call mail
   end
 end

@@ -3,9 +3,8 @@ module Mail
     Unhandled = Class.new StandardError
 
     def call mail
-      parsed = parse_email mail
-
-      concert = songkick.find_concert \
+      parsed  = parse_email mail
+      concert = songkick.search \
         venue:   parsed.venue,
         artists: parsed.artists
 

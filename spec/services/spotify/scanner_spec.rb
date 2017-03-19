@@ -9,6 +9,9 @@ RSpec.describe Spotify::Scanner do
   Given(:scanner) { described_class.new repository: spy }
   Given(:artist)  { build :artist, name: 'Floop' }
 
+
+  When { scanner.call artists: [artist], spotify: client }
+
   context 'one match' do
     Given(:results) {
       {
@@ -19,8 +22,6 @@ RSpec.describe Spotify::Scanner do
         }
       }
     }
-
-    When { scanner.lookup_artist artist: artist, spotify: client }
 
     Then { calls.first == [:update_spotify_id, { artist: artist, spotify_id: '17' }] }
   end
@@ -37,8 +38,6 @@ RSpec.describe Spotify::Scanner do
       }
     }
 
-    When { scanner.lookup_artist artist: artist, spotify: client }
-
     Then { calls.first == [:update_spotify_id, { artist: artist, spotify_id: '13' }] }
   end
 
@@ -53,8 +52,6 @@ RSpec.describe Spotify::Scanner do
         }
       }
     }
-
-    When { scanner.lookup_artist artist: artist, spotify: client }
 
     Then { calls == [] }
   end

@@ -1,4 +1,9 @@
 - tickets = concert.attendees.find { |t| t.user == user }
-.btn-group
+.btn-group-vertical.status-btns
   - Tickets::STATUSES.each do |key, status|
-    = link_to status.label, concert_tickets_path(concert.songkick_id, status: key), method: :patch, class: "btn btn-primary btn-xs #{tickets.try(:status) == status ? 'active' : ''}"
+    = link_to \
+      concert_tickets_path(concert.songkick_id, status: key), \
+      method: :patch, \
+      title: status.description,
+      class: "btn btn-primary #{tickets.try(:status) == status ? 'active' : ''}" do
+      span class="glyphicon glyphicon-#{status_icon status}"

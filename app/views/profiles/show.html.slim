@@ -1,8 +1,14 @@
 .row
-  .col-md-6
+  .col-md-3
+    img.profile-avatar src=@user.image_url
+  .col-md-9
     h1= @user.name
 
-    p Email Addresses
+.row
+  .col-md-6
+    h2
+      ' Email Addresses 
+      = link_to 'Show Mail', mail_index_path, class: 'btn btn-default btn-sm'
     pre
       - @user.email_addresses.each do |address|
         = address.email
@@ -12,5 +18,5 @@
   .col-md-6
     h2 Linked Accounts
     = render partial: 'spotify', locals: { id: @spotify }
-    = render partial: 'google', locals: { id: @google }
+    = render partial: 'google',  locals: { id: @google }
 

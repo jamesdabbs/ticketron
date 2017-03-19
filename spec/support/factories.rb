@@ -1,3 +1,9 @@
+class NullObject
+  def method_missing *args
+    self
+  end
+end
+
 module Factories
   def build name, **opts
     send "build_#{name}", **opts
@@ -22,7 +28,7 @@ module Factories
   end
 
   def build_artist **opts
-    defaults Artist, opts, \
+    defaults Artist, opts,
       id:          id,
       name:        'Portugal the Man',
       spotify_id:  id,
@@ -30,13 +36,13 @@ module Factories
   end
 
   def build_venue **opts
-    defaults Venue, opts, \
+    defaults Venue, opts,
       name:        '9:30 Club',
       songkick_id: id
   end
 
   def build_mail **opts
-    defaults Email, opts, \
+    defaults Email, opts,
       id:          id,
       user:        build(:user),
       concert:     nil,
@@ -46,6 +52,19 @@ module Factories
       html:        '',
       text:        '',
       received_at: 3.minutes.ago
+  end
+
+  def build_playlist **opts
+    defaults Playlist, opts,
+      user_id:    id,
+      id:         id,
+      spotify_id: id,
+      url:        'http://example.com/playlist',
+      synced_at:  2.days.ago
+  end
+
+  def _
+    NullObject.new
   end
 
   private

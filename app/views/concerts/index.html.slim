@@ -1,4 +1,43 @@
-h2 Your Upcoming Concerts
+ul.nav.nav-pills.pull-right
+  li
+    a href="#" Mine
+  li.active
+    a href="#" Friends
+
 p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
 
-= render partial: 'table', locals: { concerts: @concerts, user: current_user }
+- @concerts.each do |c|
+  article
+    .row
+      .col-md-2
+        h3= c.venue.name
+        h4= day c.at
+        = link_to 'Songkick', songkick_path(c), class: 'btn btn-default btn-xs'
+      .col-md-1
+        = render partial: 'ticket_status', locals: { user: current_user, concert: c }
+      .col-md-9
+        h2
+          span.artist = c.artists.first.name
+          small with
+          - if c.artists.count > 2
+            - c.artists[1 .. -2].each do |a|
+              span.artist= a.name
+            small and
+          span.artist= c.artists.last.name
+
+        table.table.table-condensed
+          thead
+            tr
+              th RSVPs
+              th
+              th
+              th
+          tbody
+            - c.attendees.each do |a|
+              tr
+                td
+                  img.avatar-icon src=a.user.image_url
+                td= a.user.name
+                td= a.number
+                td= a.status.label
+  hr
