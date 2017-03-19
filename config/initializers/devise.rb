@@ -254,7 +254,8 @@ Devise.setup do |config|
     scope: 'user-read-email playlist-read-collaborative playlist-modify-public'
   config.omniauth :google_oauth2, \
     Figaro.env.google_client_id!,
-    Figaro.env.google_client_secret!
+    Figaro.env.google_client_secret!,
+    scope: 'email profile calendar'
 
   # ==> Warden configuration
   # If you want to use other strategies, that are not supported by Devise, or

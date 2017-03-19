@@ -1,0 +1,16 @@
+- if id
+  h3
+    ' Google 
+    small= id.data.info.email
+
+  table.table.table-condensed
+    tr
+      th Calendar
+      td
+        = ago @user.meta.google.calendar_synced
+        ' 
+        = link_to 'Refresh', calendar_path, method: :patch, class: 'btn btn-default btn-xs'
+- else
+  h3 Google
+  = link_to 'Link Account', user_google_oauth2_omniauth_authorize_path, class: 'btn btn-primary'
+  p To sync concerts to your Google calendar, and enable Google Home integration

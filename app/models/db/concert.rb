@@ -10,6 +10,15 @@ class DB::Concert < ApplicationRecord
   scope :upcoming, -> { where('at > ?', 1.day.ago).order(at: :asc) }
   scope :in_month, ->(date) { where 'at BETWEEN ? AND ?', date.at_beginning_of_month, date.at_end_of_month }
 
+  def to_model attendees: []
+    ::Concert.new \
+      artists:     artists.map(&:to_model),
+      venue:       venue.to_model,
+      at:          at,
+      songkick_id: songkick_id,
+      attendees:   attendees.map(&:to_model)
+  end
+
   def add_artist artist
     concert_artists.where(artist: artist).first_or_create!
   end

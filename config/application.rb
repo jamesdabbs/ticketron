@@ -11,6 +11,8 @@ module Ticketron
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.
+
+    config.autoload_paths << "#{Rails.root}/lib"
   end
 
   def self.container
@@ -41,6 +43,32 @@ module Ticketron
           repository: c.repository,
           notifier:   c.notifier,
           songkick:   c.songkick
+      end
+
+      c.spotify_client_builder do
+        Spotify::ClientBuilder.new repository: c.repository
+      end
+      c.spotify_login do
+        Spotify::Login.new repository: c.repository
+      end
+      c.spotify_scanner do
+        Spotify::Scanner.new repository: c.repository
+      end
+      c.spotify_playlist_finder do
+        Spotify::PlaylistFinder.new \
+          repository:     c.repository,
+          client_builder: c.spotify_client_builder
+      end
+      c.spotify_playlist_generator do
+        Spotify::PlaylistGenerator.new \
+          repository:     c.repository,
+          client_builder: c.spotify_client_builder,
+          finder:         c.spotify_playlist_finder,
+          scanner:        c.spotify_scanner
+      end
+
+      c.google_calendar_sync do
+        Google::CalendarSync.new repository: c.repository
       end
     end
   end

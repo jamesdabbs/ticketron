@@ -5,6 +5,7 @@ table.table.table-condensed.table-striped.table-hover
       th Venue
       th Artists
       th Tickets
+      th
   tbody
     - concerts.each do |c|
       tr
@@ -14,4 +15,9 @@ table.table.table-condensed.table-striped.table-hover
           - c.artists.each do |a|
             = link_to a.name, "https://songkick.com/artists/#{a.songkick_id}"
             br
-        td #{c.tickets.number} @ #{c.tickets.status.label}
+        td= render partial: 'ticket_status', locals: { user: user, concert: c }
+        td
+          ul
+            - c.attendees.each do |a|
+              - unless a.user == user
+                p #{a.user.name} | #{a.number} @ #{a.status.label}

@@ -1,9 +1,40 @@
 class Repository
   UserNotFound = Class.new StandardError
 
+  def ensure_user email:, default_name: nil
+    email   = strip_email email
+    address = DB::EmailAddress.where(email: email).first_or_create!
+    unless address.user
+      default_name ||= email.split('@').first
+      address.user = User.where(name: default_name).create!
+      address.save!
+    end
+    address.user
+  end
+
+  def attach_identity user:, identity:
+    identity.update! user: user
+  end
+
+  def identity user:, provider:
+    Identity.find_by(user: user, provider: provider)
+  end
+
+  def update_credentials identity:, credentials:
+    data = identity.data.as_json
+    data['credentials']['token']      = credentials['access_token']
+    data['credentials']['expires_at'] = Time.now + credentials['expires_in']
+    identity.update! data: data
+  end
+
   def user_by_email email
     email = strip_email email
-    User.find_by(email: email) || raise(UserNotFound.new email)
+    address = DB::EmailAddress.find_by email: email
+    if address && address.user
+      address.user
+    else
+      raise UserNotFound.new email
+    end
   end
 
   def add_tickets user:, concert:, tickets:, method:
@@ -36,7 +67,14 @@ class Repository
   end
 
   def upcoming_concerts user:
-    upcoming_attends(user: user).map { |attend| ::Concert.from_attendee attend }
+    DB::ConcertAttendee.
+      joins(:concert).
+      includes(:user, concert: [:artists, :venue]).
+      where(user_id: friends_of(user: user)).
+      where('concerts.at > ?', Time.now).
+      group_by(&:concert).
+      map { |concert, attendees| concert.to_model attendees: attendees }.
+      sort_by(&:at)
   end
 
   def other_upcoming user:, concert:
@@ -49,8 +87,8 @@ class Repository
   end
 
   def create_mail **opts
-    opts[:user] = resolve_user opts[:from]
-    Mail.create!(**opts)
+    opts[:email_address] = resolve_email opts[:from]
+    DB::Mail.create!(**opts)
   end
 
   def last_mail
@@ -62,30 +100,76 @@ class Repository
   end
 
   def mail_from user
-    Mail.where(user: user)
+    DB::Mail.
+      joins(:email_address).
+      where(email_addresses: { user: user }).
+      includes(:concert).
+      map(&:to_model)
   end
 
   def attach_concert mail:, concert:
     mail.update! concert: concert
   end
 
-  def resolve_user email
-    email = strip_email email
-    User.find_each do |u|
-      if u.spotify_data['info']['email'] == email
-        return u
-      end
+  def resolve_email email
+    email   = strip_email email
+    address = DB::EmailAddress.where(email: email).first_or_create!
+    unless address.user
+      address.update! user: User.create!(name: email.split('@').first)
     end
-    raise(UserNotFound.new email)
+    address
+  end
+
+  def update_spotify_id artist:, spotify_id:
+    DB::Artist.find(artist.id).update! spotify_id: spotify_id
+  end
+
+  def spotify_playlist user:
+    spotify = user.meta.spotify
+    return unless spotify && spotify.playlist_id
+    Playlist.new \
+      user_id:   spotify.user_id,
+      id:        spotify.playlist_id,
+      url:       spotify.playlist_url,
+      synced_at: spotify.playlist_synced
+  end
+
+  def record_spotify_playlist user:, user_id:, playlist_id:, playlist_url:
+    add_metadata user, spotify: {
+      user_id:      user_id,
+      playlist_id:  playlist_id,
+      playlist_url: playlist_url
+    }
+  end
+
+  def spotify_playlist_updated user:
+    add_metadata user, spotify: { playlist_synced: Time.now }
+  end
+
+  def google_calendar_synced user:
+    add_metadata user, google: { calendar_synced: Time.now }
   end
 
   private
+
+  def add_metadata user, updates
+    user.update! meta: user.meta.deep_merge(Hashie::Mash.new updates).as_json
+  end
+
+  def friends_of user:
+    Friendship.
+      where('from_id = ? OR to_id = ?', user.id, user.id).
+      where('approved_at IS NOT NULL').
+      pluck(:from_id, :to_id).
+      flatten.
+      uniq
+  end
 
   def upcoming_attends user:
     DB::ConcertAttendee.
       joins(:concert).
       includes(concert: [:artists, :venue]).
-      where(user: user).
+      where(user_id: user).
       where('concerts.at > ?', Time.now).
       order('concerts.at asc')
   end

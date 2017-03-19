@@ -3,8 +3,7 @@ class Mail
     Unhandled = Class.new StandardError
 
     def call mail
-      user = repository.user_by_email mail.from
-
+      user   = mail.email_address.user
       parsed = parse_email mail
 
       concert = songkick.find_concert \
@@ -18,8 +17,6 @@ class Mail
         method:  parsed.method
 
       repository.attach_concert mail: mail, concert: concert
-    rescue Repository::UserNotFound
-      notifier.email_account_not_found email: mail
     rescue Mail::Handler::Unhandled
       notifier.email_unhandled user: user, email: mail
     rescue Songkick::Scraper::ConcertNotFound

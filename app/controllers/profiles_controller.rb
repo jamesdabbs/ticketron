@@ -3,11 +3,10 @@ class ProfilesController < ApplicationController
 
   def show
     @user = current_user
-    @mail = repo.mail_from @user
 
-    @grants = Doorkeeper::AccessGrant.
-                where(resource_owner_id: current_user.id).
-                includes(:application)
-    @identities = Identity.where(user: current_user)
+    @spotify  = repo.identity user: @user, provider: 'spotify'
+    @playlist = container.spotify_playlist_finder.call @user
+
+    @google  = repo.identity user: @user, provider: 'google_oauth2'
   end
 end

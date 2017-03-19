@@ -10,7 +10,7 @@ class MailController < ApplicationController
   end
 
   def index
-    @mail = repo.mail_from(current_user).sort_by { |m| -m.created_at.to_f }
+    @mail = repo.mail_from(current_user).sort_by { |m| -m.received_at.to_f }
   end
 
   def show

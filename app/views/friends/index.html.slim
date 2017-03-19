@@ -1,0 +1,22 @@
+table.table.table-condensed.table-hover
+  thead
+    tr
+      th User
+      th Friend
+  tbody
+    - @users.each do |u|
+      tr
+        td= u.name
+        td
+          - if f = @friends[u.id]
+            - if f.approved?
+              span Y'all are friends!
+            - elsif f.to_id == current_user.id
+              = form_tag approve_friend_path(u) do
+               button.btn.btn-default Approve Friend Request
+            - else
+              span Friend request pending
+          - else
+            = form_tag friends_path do
+              input type="hidden" name="user_id" value=u.id
+              button.btn.btn-default Send Friend Request

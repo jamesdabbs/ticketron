@@ -1,4 +1,4 @@
 h2 Your Upcoming Concerts
 p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
 
-= render partial: 'table', locals: { concerts: @concerts }
+= render partial: 'table', locals: { concerts: @concerts, user: current_user }

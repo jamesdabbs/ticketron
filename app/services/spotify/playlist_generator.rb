@@ -1,18 +1,16 @@
 module Spotify
-  class PlaylistGenerator
-    AddingFailed = Class.new StandardError
+  class PlaylistGenerator < Gestalt[:repository, :client_builder, :finder, :scanner]
+    def call user
+      spotify  = client_builder.call user
+      playlist = finder.call user
 
-    def initialize user
-      @user = user
-    end
-
-    def run
-      playlist = get_playlist 'Ticketron'
+      scan_artists user: user, spotify: spotify
 
       tracks = []
-      user.upcoming_artists.each do |artist|
+      upcoming_artists(user: user).each do |artist|
+        next unless artist.spotify_id
         # TODO: weight by how long until the concert
-        tracks += spotify.artist_top_tracks(artist.spotify_id, user.country)['tracks']
+        tracks += spotify.artist_top_tracks(artist.spotify_id, 'us')['tracks']
       end
 
       # Spotify limits the number of tracks added per request to 100,
@@ -22,26 +20,23 @@ module Spotify
         uris = ts.map { |t| t.fetch 'uri' }
 
         result = spotify.add_user_tracks_to_playlist \
-          user.spotify_id, playlist.fetch('id'), uris
-        raise AddingFailed unless result
+          playlist.user_id, playlist.id, uris
+        raise Spotify::AddingFailed unless result
       end
+
+      repository.spotify_playlist_updated user: user
 
       playlist
     end
 
     private
 
-    attr_reader :user
-
-    def spotify
-      user.spotify
+    def scan_artists user:, spotify:
+      scanner.call spotify: spotify, artists: upcoming_artists(user: user)
     end
 
-    def get_playlist name
-      playlists = spotify.user_playlists(user.spotify_id)
-      found     = playlists['items'].find { |p| p.fetch('name') == name }
-      return found if found
-      spotify.create_user_playlist user.spotify_id, name
+    def upcoming_artists user:
+      repository.upcoming_concerts(user: user).map(&:artists).flatten.uniq
     end
   end
 end

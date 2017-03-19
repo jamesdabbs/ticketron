@@ -1,19 +1,11 @@
 module Spotify
-  class Scanner
-    NameMismatch = Class.new StandardError
-
-    def initialize client:, repository: nil, logger: nil
-      @client     = client
-      @repository = repository || Repository.new
-      @logger     = logger || Rails.logger
+  class Scanner < Gestalt[:repository]
+    def call artists:, spotify:
+      artists.each { |a| lookup_artist artist: a, spotify: spotify }
     end
 
-    def call
-      Artist.find_each { |a| lookup_artist artist: a }
-    end
-
-    def lookup_artist artist
-      results = client.search 'artist', artist.name
+    def lookup_artist artist:, spotify:
+      results = spotify.search 'artist', artist.name
       return unless results['artists'].present?
 
       items = results['artists']['items']
@@ -31,8 +23,6 @@ module Spotify
     end
 
     private
-
-    attr_reader :client, :repository, :logger
 
     def distance a,b
       Levenshtein.distance a,b
