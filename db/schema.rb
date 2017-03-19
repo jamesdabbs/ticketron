@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170319022810) do
+ActiveRecord::Schema.define(version: 20170318205646) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -128,6 +128,16 @@ ActiveRecord::Schema.define(version: 20170319022810) do
     t.index ["uid"], name: "index_oauth_applications_on_uid", unique: true, using: :btree
   end
 
+  create_table "spotify_playlists", force: :cascade do |t|
+    t.integer  "user_id"
+    t.string   "spotify_user_id"
+    t.string   "spotify_id"
+    t.string   "url"
+    t.datetime "created_at",      null: false
+    t.datetime "updated_at",      null: false
+    t.index ["user_id"], name: "index_spotify_playlists_on_user_id", using: :btree
+  end
+
   create_table "users", force: :cascade do |t|
     t.string   "name",                            null: false
     t.datetime "remember_created_at"
@@ -138,7 +148,6 @@ ActiveRecord::Schema.define(version: 20170319022810) do
     t.inet     "last_sign_in_ip"
     t.datetime "created_at",                      null: false
     t.datetime "updated_at",                      null: false
-    t.json     "meta"
     t.index ["name"], name: "index_users_on_name", unique: true, using: :btree
   end
 
@@ -158,4 +167,5 @@ ActiveRecord::Schema.define(version: 20170319022810) do
   add_foreign_key "mails", "email_addresses"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id"
+  add_foreign_key "spotify_playlists", "users"
 end

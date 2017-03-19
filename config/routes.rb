@@ -1,3 +1,5 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
   use_doorkeeper
 
@@ -33,6 +35,10 @@ Rails.application.routes.draw do
   post 'home' => 'voice#home'
 
   root to: 'concerts#index'
+
+  authenticate :user, lambda { |u| u.admin? } do
+    mount Sidekiq::Web => '/jobs'
+  end
 
   if Rails.env.development?
     scope :dev do

@@ -1,4 +1,6 @@
 class SyncGoogleCalendarJob < ApplicationJob
+  queue_as :sync
+
   def perform identity
     return unless identity.provider == 'google_oauth2'
 

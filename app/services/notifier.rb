@@ -3,15 +3,15 @@ class Notifier
     Rails.logger
   end
 
-  def email_unhandled user:, email:
-    logger.info "Email unhandled #{email} | #{user}"
+  def email_unhandled email:
+    logger.info "Email unhandled #{email}"
   end
 
   def email_account_not_found email:
     logger.info "Email account not found #{email}"
   end
 
-  def email_concert_not_found user:, email:
-    logger.info "Email concert not found #{email} | #{user}"
+  def email_concert_not_found email:
+    logger.info "Email concert not found #{email}"
   end
 end

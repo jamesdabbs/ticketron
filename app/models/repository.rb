@@ -50,8 +50,8 @@ class Repository
   end
 
   def next_concert_for user:
-    attend = upcoming_attends(user: user).first
-    ::Concert.from_attendee attend
+    # TODO: this doesn't need to fetch all concerts
+    upcoming_concerts(user: user).first
   end
 
   def tickets_status user:, concert:
@@ -59,18 +59,13 @@ class Repository
     att && att.status
   end
 
-  def all_upcoming_concerts
-    DB::Concert.
-      includes([:artists, :venue]).
-      where('at > ?', Time.now).
-      order(at: :asc).map { |c| ::Concert.from_db c }
-  end
-
   def upcoming_concerts user:
+    user_ids = [user.id] + friends_of(user: user)
+
     DB::ConcertAttendee.
       joins(:concert).
       includes(:user, concert: [:artists, :venue]).
-      where(user_id: friends_of(user: user)).
+      where(user_id: user_ids).
       where('concerts.at > ?', Time.now).
       group_by(&:concert).
       map { |concert, attendees| concert.to_model attendees: attendees }.

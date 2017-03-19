@@ -1,5 +1,6 @@
 class Email < Dry::Struct
   attribute :id,          T::String
+  attribute :user,        Object
   attribute :concert,     Concert.optional
   attribute :from,        T::String
   attribute :to,          T::String

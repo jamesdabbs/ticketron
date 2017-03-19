@@ -1,12 +1,13 @@
 require 'rails_helper'
 
 RSpec.describe Repository do
-  let(:user) { User.create! email: 'floop@example.com' }
-  let(:venue) { DB::Venue.create! }
+  let(:user)    { User.create! name: 'floop' }
+  let(:email)   { DB::EmailAddress.create! user: user, email: 'floop@example.com' }
+  let(:venue)   { DB::Venue.create! }
   let(:concert) { DB::Concert.create! venue: venue, at: 1.month.from_now }
 
   it 'can find users by email' do
-    u = subject.user_by_email "Floop R Pig <#{user.email}>"
+    u = subject.user_by_email "Floop R Pig <#{email.email}>"
     expect(u).to eq user
   end
 
@@ -59,7 +60,9 @@ RSpec.describe Repository do
       concerts = subject.upcoming_concerts user: user
       expect(concerts.count).to eq 1
       expect(concerts.first.at).to eq concert.at
-      expect(concerts.first.tickets.status).to eq Tickets::Print
+
+      tickets = concerts.first.tickets_for user
+      expect(tickets.status).to eq Tickets::Print
     end
 
     it 'can find others in a month' do

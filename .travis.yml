@@ -1,0 +1,13 @@
+language: ruby
+bundler_args: --without development production --jobs=3 --retry=3
+cache: bundler
+rvm:
+  - 2.4.0
+notifications:
+  email:
+    recipients:
+    - jamesdabbs@gmail.com
+    on_success: change
+    on_failure: always
+env:
+- spotify_client_id=spotify spotify_client_secret=spotify_secret google_client_id=google google_client_secret=google_secret google_project_id=ticketron-ci

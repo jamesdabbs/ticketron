@@ -27,5 +27,9 @@ module Spotify
     def distance a,b
       Levenshtein.distance a,b
     end
+
+    def logger
+      Rails.logger
+    end
   end
 end

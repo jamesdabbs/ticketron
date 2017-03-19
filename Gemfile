@@ -28,6 +28,7 @@ gem 'omniauth'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-spotify'
 gem 'pry-rails'
+gem 'sidekiq'
 gem 'spotify-client'
 
 group :development do
@@ -45,10 +46,15 @@ group :development, :test do
 end
 
 group :test do
+  gem 'coveralls', require: false
   gem 'database_cleaner'
   gem 'rspec-given'
   gem 'simplecov'
   gem 'vcr'
   gem 'webmock'
   gem 'zonebie'
+end
+
+group :production do
+  gem 'rollbar'
 end

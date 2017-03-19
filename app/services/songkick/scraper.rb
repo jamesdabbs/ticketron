@@ -69,6 +69,7 @@ module Songkick
     def add_artist name:, url:
       DB::Artist.where(songkick_id: id(url)).first_or_create! do |a|
         a.name = name
+        Spotify::ScanArtistJob.perform_later id(url)
       end
     end
 

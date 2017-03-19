@@ -5,7 +5,7 @@ require 'pry'
 
 Dotenv.load
 
-HOSTNAME = 'mail.jdabbs.com'
+HOSTNAME = 'dev.jdabbs.com'
 
 response  = HTTParty.get('http://localhost:4040/status')
 NGROK = response.body =~ /(https:\/\/\w+.ngrok.io)/ && $1

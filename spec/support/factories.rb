@@ -14,35 +14,48 @@ module Factories
       ],
       venue: { name: '9:30 Club' },
       at: 3.weeks.from_now
-    }.merge(opts))
+    }.deep_merge(opts))
   end
 
   def build_user **opts
-    defaults User, opts, email: 'test@example.com'
+    defaults User, opts, name: 'Test User'
   end
 
   def build_artist **opts
     defaults Artist, opts, \
-      id:          rand(1 .. 1_000_000),
+      id:          id,
       name:        'Portugal the Man',
-      spotify_id:  rand(1 .. 1_000_000),
-      songkick_id: rand(1 .. 1_000_000)
+      spotify_id:  id,
+      songkick_id: id
   end
 
   def build_venue **opts
     defaults Venue, opts, \
       name:        '9:30 Club',
-      songkick_id: rand(1 .. 1_000_000)
+      songkick_id: id
   end
 
   def build_mail **opts
-    defaults Mail, opts
+    defaults Email, opts, \
+      id:          id,
+      user:        build(:user),
+      concert:     nil,
+      from:        'from@example.com',
+      to:          'to@example.com',
+      subject:     'subject',
+      html:        '',
+      text:        '',
+      received_at: 3.minutes.ago
   end
 
   private
 
   def defaults klass, overrides, **defs
     klass.new defs.merge overrides
+  end
+
+  def id
+    rand 1 .. 1_000_000
   end
 end
 

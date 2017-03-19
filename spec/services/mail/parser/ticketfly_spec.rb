@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe Mail::Parser::Ticketfly do
   it 'can parse text' do
-    mail = Mail.new \
+    mail = build :mail,
       subject: 'Your Ticketfly Order',
       text:    File.read(Rails.root.join 'spec/fixtures/ticketfly.txt')
 
