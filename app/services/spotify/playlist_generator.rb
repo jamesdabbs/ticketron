@@ -1,6 +1,8 @@
 module Spotify
+  AddingFailed = Class.new StandardError
+
   class PlaylistGenerator < Gestalt[:repository, :client_builder, :finder, :scanner]
-    def call user
+    def call user:
       spotify  = client_builder.call user
       playlist = finder.call user
 
@@ -10,7 +12,7 @@ module Spotify
       upcoming_artists(user: user).each do |artist|
         next unless artist.spotify_id
         # TODO: weight by how long until the concert
-        tracks += spotify.artist_top_tracks(artist.spotify_id, 'us')['tracks']
+        tracks += spotify.artist_top_tracks(artist.spotify_id, 'us').fetch('tracks')
       end
 
       # Spotify limits the number of tracks added per request to 100,
@@ -24,7 +26,7 @@ module Spotify
         raise Spotify::AddingFailed unless result
       end
 
-      repository.spotify_playlist_updated user: user
+      repository.update_spotify_playlist user: user, synced: Time.now
 
       playlist
     end
@@ -32,11 +34,14 @@ module Spotify
     private
 
     def scan_artists user:, spotify:
-      scanner.call spotify: spotify, artists: upcoming_artists(user: user)
+      missing = upcoming_artists(user: user).select { |a| a.spotify_id.nil? }
+      if missing.any?
+        scanner.call spotify: spotify, artists: missing
+      end
     end
 
     def upcoming_artists user:
-      repository.upcoming_concerts(user: user).map(&:artists).flatten.uniq
+      repository.upcoming_concerts(users: [user]).map(&:artists).flatten.uniq
     end
   end
 end

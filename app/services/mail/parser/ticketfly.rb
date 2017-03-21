@@ -1,62 +1,40 @@
 module Mail
   module Parser
-    class Ticketfly
-      def call mail
+    class Ticketfly < Gestalt[:songkick]
+      def call mail:
         return unless mail.subject =~ /Your Ticketfly Order/i
 
-        lines = mail.text.split "\n"
+        _songkick = songkick
+        Mail::Scanner.scan mail.text do
+          scan_to(/^Event Information/)
 
-        while line = lines.shift
-          break if line == 'Event Information'
-        end
+          artists, date = scan_to { |l| Date.parse(l) rescue nil }
 
-        artists, date = [], nil
-        while line = lines.shift
-          next if line.empty?
-          next if line.include?('<http://')
-          next if line =~ /presents:$/i
+          scan_to(/Doors:/)
 
-          begin
-            date = Date.parse line
-            break
-          rescue ArgumentError
-            artists.push line
-          end
-        end
+          location, _ = scan_to(/Map/)
 
-        venue = nil
-        while line = lines.shift
-          next if line.empty? || line.include?('Doors:')
-          venue = line
-          break
-        end
+          venue    = location.shift
+          _address = location.join "\n"
 
-        while line = lines.shift
-          break if line.start_with?('Order Details')
-        end
+          scan_to(/^Order Details/)
 
-        ticket_count = nil
-        while line = lines.shift
-          next unless line =~ /^(\d+) tickets/i
-          ticket_count = Integer($1)
-          break
-        end
+          concert = _songkick.find_concert venue: venue, artists: artists, date: date
 
-        delivery_method = nil
-        while line = lines.shift
-          next unless line =~ /^Delivery method (.*)/i
+          _, ticket_count = scan_to { |l| l =~ /^(\d+) tickets/ && Integer($1) }
+
+          _, method = scan_to { |l| l =~ /^Delivery method (.*)/i && $1 }
+
           delivery_method = {
             'Will Call'     => Tickets::WillCall,
             'Standard Mail' => Tickets::ByMail
-          }.fetch($1)
-          break
-        end
+          }.fetch(method)
 
-        Mail::Parser::Result.new \
-          venue:   venue,
-          artists: artists,
-          tickets: ticket_count,
-          method:  delivery_method
+          Mail::Parser::Result.new \
+            concert: concert,
+            tickets: ticket_count,
+            method:  delivery_method
+        end
       end
     end
   end

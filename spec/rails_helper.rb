@@ -2,6 +2,7 @@ ENV['RAILS_ENV'] ||= 'test'
 
 require 'simplecov'
 SimpleCov.start 'rails' do
+  add_group 'Graph',    'app/graphql'
   add_group 'Services', 'app/services'
 end
 
@@ -23,4 +24,10 @@ RSpec.configure do |config|
   config.infer_spec_type_from_file_location!
 
   config.filter_rails_from_backtrace!
+
+  config.include(Module.new do
+    def truncate!
+      DatabaseCleaner.clean_with :truncation
+    end
+  end)
 end

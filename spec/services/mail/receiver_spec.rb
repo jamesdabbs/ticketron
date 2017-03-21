@@ -13,7 +13,7 @@ RSpec.describe Mail::Receiver do
       let(:handler) { ->(m) { m } }
 
       it 'records a message' do
-        expect(repository).to receive(:create_mail)
+        expect(repository).to receive(:save_mail)
 
         receiver.call(from: 'from', to: 'to')
       end
@@ -23,7 +23,7 @@ RSpec.describe Mail::Receiver do
       let(:handler) { ->(*_) { raise 'Forced error' } }
 
       it 'records a message' do
-        expect(repository).to receive(:create_mail)
+        expect(repository).to receive(:save_mail)
 
         expect do
           receiver.call(from: 'from', to: 'to')

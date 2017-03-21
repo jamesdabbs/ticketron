@@ -1,10 +1,12 @@
-ul.nav.nav-pills.pull-right
-  li
-    a href="#" Mine
-  li.active
-    a href="#" Friends
-
-p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
+.row
+  .col-md-6
+    p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
+  .col-md-6
+    = form_tag concerts_path do
+      .input-group
+        input.form-control type="text" name="q" placeholder="Search Songkick for concert"
+        span.input-group-btn
+          button.btn.btn-default Add
 
 - @concerts.each do |c|
   article
@@ -14,7 +16,7 @@ p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
         h4= day c.at
         = link_to 'Songkick', songkick_path(c), class: 'btn btn-default btn-xs'
       .col-md-1
-        = render partial: 'ticket_status', locals: { user: current_user, concert: c }
+        /= render partial: 'ticket_status', locals: { user: current_user, concert: c }
       .col-md-9
         h2
           span.artist = c.artists.first.name
@@ -25,7 +27,7 @@ p Forward your tickets to <code>ticketron@mail.jdabbs.com</code> to add more
             small and
           span.artist= c.artists.last.name
 
-        table.table.table-condensed
+        /table.table.table-condensed
           thead
             tr
               th RSVPs

@@ -9,26 +9,20 @@ Rails.application.routes.draw do
     delete '/users/sign_out' => 'auth#logout', as: :destroy_user_session
   end
 
-  resource :profile, only: [:show]
-  resources :friends, only: [:index, :show, :create] do
-    member do
-      post :approve
+  resource :profile, only: [:show] do
+    resources :emails, only: [:create] do
+      member do
+        post  :send_confirmation
+        patch :verify_confirmation
+      end
     end
   end
 
-  resources :concerts, only: [:index, :create, :show] do
-    resource :tickets, only: [:update]
-  end
+  resource :google_calendar, only: [:update]
+  resource :spotify,         only: [:update]
+  resource :songkick,        only: [:update]
 
-  resource :spotify, only: [:update, :show]
-
-  resources :mail, only: [:index, :show, :create] do
-    member do
-      post :retry
-    end
-  end
-
-  resource :calendar, only: [:update]
+  resources :mail, only: [:create]
 
   post 'home' => 'voice#home'
 
@@ -38,7 +32,11 @@ Rails.application.routes.draw do
     mount Sidekiq::Web => '/jobs'
   end
 
+  post "/graphql", to: "graphql#execute"
+
   if Rails.env.development?
+    mount GraphiQL::Rails::Engine, at: "/graphiql", graphql_path: "/graphql"
+
     scope :dev do
       get 'login/:id' => 'dev#force_login'
     end

@@ -3,7 +3,7 @@ require 'rails_helper'
 RSpec.describe Mail::Handler do
   let(:repository) { instance_double Repository }
   let(:notifier)   { instance_double Notifier }
-  let(:songkick)   { instance_double Songkick::Scraper }
+  let(:songkick)   { instance_double Songkick }
 
   let(:user)    { build :user }
   let(:concert) { build :concert }
@@ -22,16 +22,13 @@ RSpec.describe Mail::Handler do
     let(:parsers) { [
       ->(_) {
         Mail::Parser::Result.new \
-          venue:   build(:venue),
-          artists: [build(:artist)],
+          concert: concert,
           tickets: 4,
           method:  Tickets::WillCall
       }
     ] }
 
     it 'can parse and record an email' do
-      expect(songkick).to receive(:search).and_return(concert)
-
       expect(repository).to receive(:add_tickets).with(
         user: user, concert: concert, tickets: 4, method: Tickets::WillCall)
       expect(notifier).not_to receive(:email_unhandled)
@@ -39,9 +36,14 @@ RSpec.describe Mail::Handler do
       expect(repository).to receive(:attach_concert).with(concert: concert, mail: mail)
       handler.call mail
     end
+  end
+
+  context 'failing to find concert' do
+    let(:parsers) { [
+      ->(_) { raise Songkick::ConcertNotFound }
+    ] }
 
     it 'can fail to find a concert' do
-      expect(songkick).to receive(:search).and_raise(Songkick::Scraper::ConcertNotFound)
       expect(notifier).to receive(:email_concert_not_found).with(email: mail)
 
       handler.call mail

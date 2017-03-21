@@ -3,7 +3,6 @@ ruby '2.4.0'
 
 gem 'rails', '~> 5.0.0', '>= 5.0.0.1'
 gem 'pg', '~> 0.18'
-gem 'puma', '~> 3.0'
 
 gem 'bootstrap_form'
 gem 'jbuilder', '~> 2.5'
@@ -19,21 +18,26 @@ gem 'doorkeeper'
 gem 'dry-struct'
 gem 'figaro'
 gem 'fuzzy_match'
-gem 'gestalt', github: 'jamesdabbs/gestalt'
+gem 'gestalt', path: '/Users/james/src/gestalt'
+# gem 'gestalt', git: 'https://github.com/jamesdabbs/gestalt.git'
 gem 'google-api-client', '0.8.2', require: 'google/api_client'
+gem 'graphql'
 gem 'httparty'
 gem 'levenshtein'
-gem 'mechanize'
 gem 'omniauth'
 gem 'omniauth-google-oauth2'
 gem 'omniauth-spotify'
 gem 'pry-rails'
+gem 'rack-cors'
 gem 'sidekiq'
+gem 'songkickr'
 gem 'spotify-client'
 
 group :development do
   gem 'better_errors'
   gem 'binding_of_caller'
+  gem 'colorize'
+  gem 'graphiql-rails'
 
   gem 'listen', '~> 3.0.5'
   gem 'spring'
@@ -56,5 +60,6 @@ group :test do
 end
 
 group :production do
+  gem 'puma', '~> 3.0'
   gem 'rollbar'
 end

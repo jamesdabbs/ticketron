@@ -8,13 +8,14 @@ module Mail
     end
 
     def call params
-      mail = repository.create_mail \
-        from:    params[:from],
-        to:      params[:to],
-        subject: params[:subject],
-        headers: params[:headers],
-        html:    params[:html],
-        text:    params[:text]
+      mail = repository.save_mail \
+        received_at: Time.now,
+        from:        params[:from],
+        to:          params[:to],
+        subject:     params[:subject],
+        headers:     params[:headers],
+        html:        params[:html],
+        text:        params[:text]
       handler.call mail
     end
   end

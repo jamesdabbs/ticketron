@@ -1,12 +1,11 @@
 module Voice::Handlers
-  class ConcertCheck < Gestalt[:repository]
+  class ConcertCheck < Gestalt[:repository, :concert_finder]
     include Helpers
 
     def call request
       user = require_user! request
 
-      concert_name = request.params[:concert]
-      concert = repository.concert_by_name user: user, name: concert_name
+      concert = concert_finder.call user: user, name: request.params[:concert]
 
       text = ["Your concert for #{describe_concert concert} is on #{date concert.at}"]
 

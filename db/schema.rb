@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20170319220447) do
+ActiveRecord::Schema.define(version: 20170326214427) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -19,6 +19,7 @@ ActiveRecord::Schema.define(version: 20170319220447) do
     t.string "name"
     t.string "songkick_id"
     t.string "spotify_id"
+    t.index ["songkick_id"], name: "index_artists_on_songkick_id", using: :btree
   end
 
   create_table "concert_artists", force: :cascade do |t|
@@ -43,14 +44,16 @@ ActiveRecord::Schema.define(version: 20170319220447) do
     t.integer  "venue_id"
     t.string   "songkick_id"
     t.datetime "at"
+    t.index ["songkick_id"], name: "index_concerts_on_songkick_id", using: :btree
     t.index ["venue_id"], name: "index_concerts_on_venue_id", using: :btree
   end
 
   create_table "email_addresses", force: :cascade do |t|
     t.integer  "user_id"
     t.string   "email"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
+    t.datetime "created_at",                 null: false
+    t.datetime "updated_at",                 null: false
+    t.boolean  "verified",   default: false, null: false
     t.index ["email"], name: "index_email_addresses_on_email", using: :btree
     t.index ["user_id"], name: "index_email_addresses_on_user_id", using: :btree
   end
@@ -72,7 +75,6 @@ ActiveRecord::Schema.define(version: 20170319220447) do
     t.json     "data"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.json     "store"
     t.index ["user_id"], name: "index_identities_on_user_id", using: :btree
   end
 
@@ -129,17 +131,22 @@ ActiveRecord::Schema.define(version: 20170319220447) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string   "name",                            null: false
+    t.string   "name",                                null: false
     t.datetime "remember_created_at"
-    t.integer  "sign_in_count",       default: 0, null: false
+    t.integer  "sign_in_count",           default: 0, null: false
     t.datetime "current_sign_in_at"
     t.datetime "last_sign_in_at"
     t.inet     "current_sign_in_ip"
     t.inet     "last_sign_in_ip"
-    t.datetime "created_at",                      null: false
-    t.datetime "updated_at",                      null: false
-    t.json     "meta"
+    t.datetime "created_at",                          null: false
+    t.datetime "updated_at",                          null: false
     t.string   "image_url"
+    t.string   "spotify_id"
+    t.string   "spotify_playlist_id"
+    t.string   "spotify_playlist_url"
+    t.datetime "spotify_playlist_synced"
+    t.string   "songkick_username"
+    t.datetime "google_calendar_synced"
     t.index ["name"], name: "index_users_on_name", unique: true, using: :btree
   end
 
@@ -147,6 +154,7 @@ ActiveRecord::Schema.define(version: 20170319220447) do
     t.string "songkick_id"
     t.string "name"
     t.string "address"
+    t.index ["songkick_id"], name: "index_venues_on_songkick_id", using: :btree
   end
 
   add_foreign_key "concert_artists", "artists"
@@ -154,7 +162,6 @@ ActiveRecord::Schema.define(version: 20170319220447) do
   add_foreign_key "concert_attendees", "concerts"
   add_foreign_key "concert_attendees", "users"
   add_foreign_key "concerts", "venues"
-  add_foreign_key "email_addresses", "users"
   add_foreign_key "mails", "concerts"
   add_foreign_key "mails", "email_addresses"
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id"

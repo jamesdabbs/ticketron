@@ -1,0 +1,11 @@
+h3
+  = render partial: 'refresh_btn', locals: { path: songkick_path, last: user.songkick.synced_at }
+  ' Songkick
+
+p Sync with concerts tracked on Songkick
+= bootstrap_form_tag url: songkick_path, method: :patch do
+  .input-group
+    input.form-control name='username' placeholder='Username' value=user.songkick.username
+    .input-group-btn
+      button.btn.btn-default Save
+  end

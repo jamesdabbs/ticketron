@@ -7,6 +7,12 @@ class Tickets < Dry::Struct
     def self.build key, label, description
       new key: key, label: label, description: description
     end
+
+    def inspect
+      # :nocov:
+      "<#{label}>"
+      # :nocov:
+    end
   end
 
   Order    = Status.build :to_order,  'Watching',    'You still need to order tickets'

@@ -1,0 +1,18 @@
+h2
+  ' Email Addresses 
+
+= bootstrap_form_tag url: profile_emails_path do |f|
+  .input-group
+    input.form-control placeholder="New Email" name="email"
+    .input-group-btn
+      button.btn.btn-default Add
+  end
+
+table.table.table-condensed
+  thead
+    tr
+      th
+  tbody
+    - user.emails.each do |address|
+      tr
+        td= address.email

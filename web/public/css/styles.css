@@ -1,0 +1,17 @@
+.concert {
+  margin-bottom: 1em;
+}
+
+.artists small {
+  margin: 0 0.3em;
+}
+
+.sk-badge {
+  height: 20px;
+  width: 20px;
+  margin: 0 0.5em;
+}
+
+.rsvp-btns {
+  margin: 21px 0;
+}

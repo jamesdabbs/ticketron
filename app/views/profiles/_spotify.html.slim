@@ -1,20 +1,14 @@
-- if id
-  h3
-    ' Spotify 
-    small= id.data.info.nickname
+h3
+  ' Spotify 
+  - if user.spotify
+    small= user.spotify.username
 
-  table.table.table-condensed
-    tr
-      th Playlist
-      td= link_to 'Open', @playlist.url
-    tr
-      th Updated
-      td
-        = ago @playlist.synced_at
-        ' 
-        = link_to 'Refresh', spotify_path, method: :patch, class: 'btn btn-default btn-xs'
+  - if user.spotify
+    = render partial: 'refresh_btn', locals: { path: spotify_path, last: user.spotify.synced_at }
+  - else
+    a.btn.btn-default.btn-xs.refresh-btn href=user_spotify_omniauth_authorize_path Link
 
+- if user.spotify
+  div= link_to 'Open Playlist', user.spotify.playlist_url
 - else
-  h3 Spotify
-  = link_to 'Link Account', user_spotify_omniauth_authorize_path, class: 'btn btn-primary'
-  p To automatically generate a Ticketron playlist on Spotify
+  p Automatically generate a playlist of your upcoming artists

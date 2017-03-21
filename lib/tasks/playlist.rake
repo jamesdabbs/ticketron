@@ -1,6 +1,8 @@
 namespace :playlist do
   desc 'Generate playlists for all users'
-  task :generate => :environment do
-    User.find_each { |u| Spotify::UpdatePlaylistJob.perform_later user }
+  task :sync => :environment do
+    DB::Identity.where(provider: Identity::Spotify).find_each do |id|
+      Spotify::UpdatePlaylistJob.perform_later user: id.user
+    end
   end
 end

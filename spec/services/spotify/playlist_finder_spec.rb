@@ -30,7 +30,7 @@ RSpec.describe Spotify::PlaylistFinder do
         } }
       ]
 
-    expect(repository).to receive(:record_spotify_playlist)
+    expect(repository).to receive(:update_spotify_playlist)
 
     finder.call _
   end
@@ -50,7 +50,7 @@ RSpec.describe Spotify::PlaylistFinder do
         'spotify' => 'http://example.com/stuff'
       }
 
-    expect(repository).to receive(:record_spotify_playlist)
+    expect(repository).to receive(:update_spotify_playlist)
 
     finder.call _
   end

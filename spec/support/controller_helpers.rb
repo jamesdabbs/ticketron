@@ -10,4 +10,5 @@ end
 
 RSpec.configure do |c|
   c.include ControllerHelpers, type: :controller
+  c.include Devise::Test::ControllerHelpers, type: :controller
 end

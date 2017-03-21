@@ -1,46 +1,26 @@
 class Repository
   UserNotFound = Class.new StandardError
 
-  def ensure_user email:, default_name: nil
-    email   = strip_email email
-    address = DB::EmailAddress.where(email: email).first_or_create!
-    unless address.user
-      default_name ||= email.split('@').first
-      address.user = User.where(name: default_name).create!
-      address.save!
+  module Helpers
+    def next_concert_for user:
+      upcoming_concerts(users: [user], limit: 1).first
     end
+
+    def other_upcoming user:, concert:
+      upcoming_concerts(user: user).
+        select { |c| c.at.month == concert.at.month && c != concert }
+    end
+  end
+  include Helpers
+
+  # ~~ Users ~~
+  def user_for_email email, name:
+    address = DB::EmailAddress.where(email: email).first_or_initialize
+    address.user      ||= User.new
+    address.user.name ||= name
+    address.user.save!
+    address.save!
     address.user
-  end
-
-  def attach_identity user:, identity:
-    identity.update! user: user
-  end
-
-  def identity user:, provider:
-    Identity.find_by(user: user, provider: provider)
-  end
-
-  def update_credentials identity:, credentials:
-    data = identity.data.as_json
-    data['credentials']['token']      = credentials['access_token']
-    data['credentials']['expires_at'] = Time.now + credentials['expires_in']
-    identity.update! data: data
-  end
-
-  def user_by_email email
-    email = strip_email email
-    address = DB::EmailAddress.find_by email: email
-    if address && address.user
-      address.user
-    else
-      raise UserNotFound.new email
-    end
-  end
-
-  def add_tickets user:, concert:, tickets: 1, method:
-    con = DB::Concert.find_by! songkick_id: concert.songkick_id
-    att = DB::ConcertAttendee.where(user: user, concert: con).first_or_initialize
-    att.update! number: tickets, status: method
   end
 
   def user_for_voice_request request
@@ -50,119 +30,164 @@ class Repository
     User.find_by id: token.resource_owner_id
   end
 
-  def next_concert_for user:
-    # TODO: this doesn't need to fetch all concerts
-    upcoming_concerts(user: user).first
+  def find_auth user:, provider:
+    id = Identity.find_by user: user, provider: provider
+    id && id.data
   end
 
-  def tickets_status user:, concert:
-    att = DB::ConcertAttendee.find_by user: user, concert: concert
-    att && att.status
+  def attach_identity user:, provider:, auth:
+    id = Identity.where(user: user, provider: provider).first_or_initialize
+    id.data = auth.to_h
+    id.save!
+    id
   end
 
-  def upcoming_concerts user:
-    user_ids = [user.id] + friends_of(user: user)
+  def update_credentials user:, provider:, credentials:
+    id = Identity.find_by! user: user, provider: provider
+    auth = id.data
+    auth.credentials = credentials
+    id.data = auth
+    id.save!
+  end
 
-    DB::ConcertAttendee.
+  # ~~ Venues ~~
+  def ensure_venue songkick_id:, name:
+    DB::Venue.
+      where(songkick_id: songkick_id).
+      create_with(name: name).
+      first_or_create!.
+      to_model
+  end
+
+  # ~~ Concerts ~~
+  def ensure_concert venue:, artists:, songkick_id:, at:
+    if c = DB::Concert.find_by(songkick_id: songkick_id)
+      return c.to_model
+    end
+
+    v = create_songkick DB::Venue, venue
+
+    c = create_songkick DB::Concert,
+      songkick_id: songkick_id,
+      venue:       v,
+      at:          at
+
+    artists.each do |artist|
+      a = create_songkick DB::Artist, artist
+      DB::ConcertArtist.where(concert: c, artist: a).first_or_create!
+
+      Spotify::ScanArtistJob.perform_later songkick_id: a.songkick_id
+    end
+
+    c.to_model
+  end
+
+  def upcoming_concerts users:, limit: nil
+    scope = DB::ConcertAttendee.
       joins(:concert).
       includes(:user, concert: [:artists, :venue]).
-      where(user_id: user_ids).
-      where('concerts.at > ?', Time.now).
+      where(user_id: users.map(&:id)).
+      where('concerts.at > ?', Time.now)
+    scope = scope.limit limit if limit
+
+    scope.
       group_by(&:concert).
       map { |concert, attendees| concert.to_model attendees: attendees }.
       sort_by(&:at)
   end
 
-  def other_upcoming user:, concert:
-    upcoming_concerts(user: user).
-      select { |c| c.at.month == concert.at.month && c != concert }
+
+  # ~~ Tickets ~~
+  def add_tickets user:, concert:, tickets:, method:
+    con = DB::Concert.find_by! songkick_id: concert.songkick_id
+    att = DB::ConcertAttendee.where(user: user, concert: con).first_or_initialize
+
+    Google::CalendarSyncJob.perform_later user: user
+
+    att.update! number: tickets, status: method
   end
 
-  def concert_by_name user:, name:
-    ConcertResolver.new.call(concerts: upcoming_concerts(user: user), query: name).first
+  def tickets_status user:, concert:
+    con = DB::Concert.find_by! songkick_id: concert.songkick_id
+    att = DB::ConcertAttendee.find_by user: user, concert: con
+    att && att.status
   end
 
-  def create_mail **opts
-    opts[:email_address] = resolve_email opts[:from]
-    DB::Email.create!(**opts)
+  # ~~ Mail ~~
+  def claim_email user:, email:
+    address = DB::EmailAddress.find_by(email: email)
+    if address && address.user_id != user.id
+      raise Email::Taken
+    end
+
+    DB::EmailAddress.create! user: user, email: email
   end
 
-  def find_mail id:
-    DB::Email.find params[:id]
-  end
+  def save_mail from:, to:, subject:, headers:, html:, text:, received_at:
+    address = DB::EmailAddress.
+      where(email: Email.standardize(from)).
+      first_or_create!
 
-  def last_mail
-    Email.last
-  end
-
-  def user_by_spotify_id id
-    User.find_by! spotify_id: id
+    DB::Email.create!(
+      email_address: address,
+      from:          from,
+      to:            to,
+      subject:       subject,
+      html:          html,
+      text:          text,
+      created_at:    received_at
+    ).to_model
   end
 
   def mail_from user
     DB::Email.
       joins(:email_address).
-      where(email_addresses: { user: user }).
+      where(email_addresses: { user_id: user.id }).
       includes(:concert).
       map(&:to_model)
   end
 
   def attach_concert mail:, concert:
-    mail.update! concert: concert
+    DB::Email.find(mail.id).update! concert: \
+      DB::Concert.find_by(songkick_id: concert.songkick_id)
   end
 
-  def resolve_email email
-    email   = strip_email email
-    address = DB::EmailAddress.where(email: email).first_or_create!
-    unless address.user
-      address.update! user: User.create!(name: email.split('@').first)
-    end
-    address
+  # ~~ Spotify ~~
+  def spotify_playlist user:
+    return unless user.spotify_playlist_id
+    Playlist.new \
+      user_id:   user.spotify_id,
+      id:        user.spotify_playlist_id,
+      url:       user.spotify_playlist_url,
+      synced_at: user.spotify_playlist_synced
+  end
+
+  def update_spotify user:, user_id: nil, id: nil, url: nil, synced: nil
+    updates = {
+      spotify_id:              user_id,
+      spotify_playlist_id:     id,
+      spotify_playlist_url:    url,
+      spotify_playlist_synced: synced
+    }.select { |_,v| v.present? }
+
+    user.update! updates
   end
 
   def update_spotify_id artist:, spotify_id:
     DB::Artist.find(artist.id).update! spotify_id: spotify_id
   end
 
-  def spotify_playlist user:
-    spotify = user.meta.spotify
-    return unless spotify && spotify.playlist_id
-    Playlist.new \
-      user_id:   spotify.user_id,
-      id:        spotify.playlist_id,
-      url:       spotify.playlist_url,
-      synced_at: spotify.playlist_synced
-  end
-
-  def record_spotify_playlist user:, user_id:, playlist_id:, playlist_url:
-    add_metadata user, spotify: {
-      user_id:      user_id,
-      playlist_id:  playlist_id,
-      playlist_url: playlist_url
-    }
-  end
-
-  def spotify_playlist_updated user:
-    add_metadata user, spotify: { playlist_synced: Time.now }
-  end
-
+  # ~~ Google ~~
   def google_calendar_synced user:
-    add_metadata user, google: { calendar_synced: Time.now }
+    user.update! google_calendar_synced: Time.now
   end
 
-  def get_concert songkick_id:
-    DB::Concert.find_by(songkick_id: songkick_id).try :to_model
-  end
-
-  def create_concert concert
-    raise NotImplemented
+  # ~~ Songick ~~
+  def update_songkick user:, username:
+    User.find(user.id).update! songkick_username: username
   end
 
   private
-
-  def add_metadata user, updates
-    user.update! meta: user.meta.deep_merge(Hashie::Mash.new updates).as_json
-  end
 
   def friends_of user:
     Friendship.
@@ -173,16 +198,10 @@ class Repository
       uniq
   end
 
-  def upcoming_attends user:
-    DB::ConcertAttendee.
-      joins(:concert).
-      includes(concert: [:artists, :venue]).
-      where(user_id: user).
-      where('concerts.at > ?', Time.now).
-      order('concerts.at asc')
-  end
-
-  def strip_email email
-    email =~ /<([^>]+)>/ ? $1 : email
+  def create_songkick model, songkick_id:, **opts
+    model.
+      where(songkick_id: songkick_id).
+      create_with(**opts).
+      first_or_create!
   end
 end

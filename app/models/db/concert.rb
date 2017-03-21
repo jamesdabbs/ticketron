@@ -11,7 +11,7 @@ class DB::Concert < ApplicationRecord
   scope :in_month, ->(date) { where 'at BETWEEN ? AND ?', date.at_beginning_of_month, date.at_end_of_month }
 
   def to_model attendees: []
-    ::Concert.new \
+    ::Concert::WithAttendees.new \
       artists:     artists.map(&:to_model),
       venue:       venue.to_model,
       at:          at,

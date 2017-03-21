@@ -1,12 +1,14 @@
 module Spotify
-  class ClientBuilder < Gestalt[:repository]
-    def call user
-      identity = repository.identity user: user, provider: 'spotify'
-      raise Spotify::NotLinked unless identity
+  NotLinked = Class.new Error
 
-      creds = identity.data.credentials
-      token = if creds.expires_at.to_i <= Time.now.to_i - 10
-        refresh_token identity
+  class ClientBuilder < Gestalt[:repository, :http]
+    def call user
+      auth = repository.find_auth user: user, provider: Identity::Spotify
+      raise Spotify::NotLinked unless auth
+
+      creds = auth.credentials
+      token = if creds.expires_at <= 30.seconds.from_now.to_i
+        refresh_token user: user, credentials: creds
       else
         creds.token
       end
@@ -16,17 +18,30 @@ module Spotify
 
     private
 
-    def refresh_token identity
-      response = HTTParty.post 'https://accounts.spotify.com/api/token',
+    def refresh_token user:, credentials:
+      response = http.call :post, 'https://accounts.spotify.com/api/token',
         body: {
-          grant_type: 'refresh_token',
-          refresh_token: identity.data.credentials.refresh_token
+          grant_type:    'refresh_token',
+          refresh_token: credentials.refresh_token
         },
         basic_auth: {
           username: Figaro.env.spotify_client_id!,
           password: Figaro.env.spotify_client_secret!
         }
-      repository.update_credentials identity: identity, credentials: response
+
+      response['expires_at'] = (Time.now + response['expires_in']).to_i
+
+      repository.update_credentials \
+        provider:    Identity::Spotify,
+        user:        user,
+        credentials: {
+          'token'         => response.fetch('access_token'),
+          'refresh_token' => credentials.refresh_token,
+          'expires_at'    => (Time.now + response.fetch('expires_in')).to_i,
+          'expires'       => true,
+          'scope'         => response.fetch('scope')
+        }
+
       response.fetch('access_token')
     end
   end

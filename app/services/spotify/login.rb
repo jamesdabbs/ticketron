@@ -1,11 +1,12 @@
 class Spotify::Login < Gestalt[:repository]
-  def call id
-    email = id.data['info']['email']
-    name  = id.data['info']['name']
+  def call auth:
+    email = auth['info']['email']
+    name  = auth['info']['name']
 
-    user = repository.ensure_user email: email, default_name: name
+    user = repository.user_for_email email, name: name
 
-    repository.attach_identity user: user, identity: id
+    repository.attach_identity user: user, provider: Identity::Spotify, auth: auth
+    repository.update_spotify  user: user, user_id: auth.uid
 
     user
   end

@@ -14,11 +14,11 @@ module Spotify
         found = spotify.create_user_playlist(user_id, playlist_name)
       end
 
-      repository.record_spotify_playlist \
-        user:         user,
-        user_id:      user_id,
-        playlist_id:  found.fetch('id'),
-        playlist_url: found.fetch('external_urls').fetch('spotify')
+      repository.update_spotify_playlist \
+        user:    user,
+        user_id: user_id,
+        id:      found.fetch('id'),
+        url:     found.fetch('external_urls').fetch('spotify')
 
       repository.spotify_playlist user: user
     end

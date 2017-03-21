@@ -1,21 +1,19 @@
 module Google
-  class CalendarSync < Gestalt[:repository]
-    def call user:, auth:
-      service = Google::Calendar.new auth
+  class CalendarSync < Gestalt[:repository, :build_calendar]
+    def call user:, auth: nil
+      auth ||= repository.find_auth user: user, provider: Identity::Google
 
-      calendar = service.list_calendars['items'].find { |c| c['summary'] == 'Ticketron' }
+      service  = build_calendar.call auth
+      calendar = service.list_calendars.find { |c| c['summary'] == 'Ticketron' }
       unless calendar
         service.insert_calendar 'Ticketron'
-        calendar = service.list_calendars['items'].find { |c| c['summary'] == 'Ticketron' }
+        calendar = service.list_calendars.find { |c| c['summary'] == 'Ticketron' }
       end
 
       cal_id   = calendar.fetch 'id'
-      existing = service.list_events(cal_id).fetch('items').map { |i| i['description'] }
+      existing = service.list_events(cal_id).map { |i| i['description'] }
 
-      repository.upcoming_concerts(user: user).each do |concert|
-        tickets = concert.attendees.find { |t| t.user == user }
-        next unless tickets
-
+      repository.upcoming_concerts(users: [user]).each do |concert|
         next if existing.any? { |desc| desc.include? concert.songkick_id }
         url = "https://ticketron.herokuapp.com/concerts/#{concert.songkick_id}"
 
